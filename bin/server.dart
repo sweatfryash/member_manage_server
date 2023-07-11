@@ -1,7 +1,3 @@
-// Copyright (c) 2021, the Dart project authors. Please see the AUTHORS file
-// for details. All rights reserved. Use of this source code is governed by a
-// BSD-style license that can be found in the LICENSE file.
-
 import 'dart:convert';
 import 'dart:io';
 
@@ -14,39 +10,28 @@ import 'package:args/args.dart';
 Future<void> main(List<String> args) async {
   // 定义命令行参数解析器
   final parser = ArgParser();
-  // 添加参数选项
   parser.addOption('webAppDirectoryPath');
-  // 解析传入的参数
   final results = parser.parse(args);
-  // 获取参数值
   final webAppDirectoryPath = results['webAppDirectoryPath'] as String?;
   if (webAppDirectoryPath == null) {
     print('请传入参数: --webAppDirectoryPath');
     return;
   }
-  // 在代码中使用参数值
   print('传入的参数值为: $webAppDirectoryPath');
-  // If the "PORT" environment variable is set, listen to it. Otherwise, 8080.
-  // https://cloud.google.com/run/docs/reference/container-contract#port
-  final port = int.parse(Platform.environment['PORT'] ?? '8080');
 
-  // See https://pub.dev/documentation/shelf/latest/shelf/Cascade-class.html
-  final cascade = Cascade()
-      .add(getStaticHandler(webAppDirectoryPath))
-      // If a corresponding file is not found, send requests to a `Router`
-      .add(_router);
+  final port = int.parse(Platform.environment['PORT'] ?? '8080');
+  final cascade =
+      Cascade().add(getStaticHandler(webAppDirectoryPath)).add(_router);
 
   // See https://pub.dev/documentation/shelf/latest/shelf_io/serve.html
   final server = await shelf_io.serve(
-    // See https://pub.dev/documentation/shelf/latest/shelf/logRequests.html
-    logRequests()
-        // See https://pub.dev/documentation/shelf/latest/shelf/MiddlewareExtensions/addHandler.html
-        .addHandler(cascade.handler),
-    InternetAddress.anyIPv4, // Allows external connections
+    logRequests().addHandler(cascade.handler),
+    InternetAddress.anyIPv4,
     port,
   );
 
   print('Serving at http://${server.address.host}:${server.port}');
+  print('Web app is at http://localhost:${server.port}');
 
   // Used for tracking uptime of the demo server.
   _watch.start();
@@ -64,9 +49,8 @@ final _router = shelf_router.Router()
   ..get('/helloworld', _helloWorldHandler)
   ..get(
     '/time',
-    (request) => Response.ok(DateTime.now().toUtc().toIso8601String()),
+    (request) => Response.ok(DateTime.now().toLocal().toString()),
   )
-  ..get('/info.json', _infoHandler)
   ..get('/sum/<a|[0-9]+>/<b|[0-9]+>', _sumHandler);
 
 Response _helloWorldHandler(Request request) => Response.ok('Hello, World!');
@@ -91,25 +75,3 @@ Response _sumHandler(Request request, String a, String b) {
 }
 
 final _watch = Stopwatch();
-
-int _requestCount = 0;
-
-final _dartVersion = () {
-  final version = Platform.version;
-  return version.substring(0, version.indexOf(' '));
-}();
-
-Response _infoHandler(Request request) => Response(
-      200,
-      headers: {
-        ..._jsonHeaders,
-        'Cache-Control': 'no-store',
-      },
-      body: _jsonEncode(
-        {
-          'Dart version': _dartVersion,
-          'uptime': _watch.elapsed.toString(),
-          'requestCount': ++_requestCount,
-        },
-      ),
-    );
