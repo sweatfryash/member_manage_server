@@ -9,16 +9,30 @@ import 'package:shelf/shelf.dart';
 import 'package:shelf/shelf_io.dart' as shelf_io;
 import 'package:shelf_router/shelf_router.dart' as shelf_router;
 import 'package:shelf_static/shelf_static.dart' as shelf_static;
+import 'package:args/args.dart';
 
-Future<void> main() async {
+Future<void> main(List<String> args) async {
+  // 定义命令行参数解析器
+  final parser = ArgParser();
+  // 添加参数选项
+  parser.addOption('webAppDirectoryPath');
+  // 解析传入的参数
+  final results = parser.parse(args);
+  // 获取参数值
+  final webAppDirectoryPath = results['webAppDirectoryPath'] as String?;
+  if (webAppDirectoryPath == null) {
+    print('请传入参数: --webAppDirectoryPath');
+    return;
+  }
+  // 在代码中使用参数值
+  print('传入的参数值为: $webAppDirectoryPath');
   // If the "PORT" environment variable is set, listen to it. Otherwise, 8080.
   // https://cloud.google.com/run/docs/reference/container-contract#port
   final port = int.parse(Platform.environment['PORT'] ?? '8080');
 
   // See https://pub.dev/documentation/shelf/latest/shelf/Cascade-class.html
   final cascade = Cascade()
-      // First, serve files from the 'public' directory
-      .add(_staticHandler)
+      .add(getStaticHandler(webAppDirectoryPath))
       // If a corresponding file is not found, send requests to a `Router`
       .add(_router);
 
@@ -39,8 +53,11 @@ Future<void> main() async {
 }
 
 // Serve files from the file system.
-final _staticHandler =
-    shelf_static.createStaticHandler('public', defaultDocument: 'index.html');
+Handler getStaticHandler(String path) => shelf_static.createStaticHandler(
+      path,
+      serveFilesOutsidePath: true,
+      defaultDocument: 'index.html',
+    );
 
 // Router instance to handler requests.
 final _router = shelf_router.Router()
