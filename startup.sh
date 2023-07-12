@@ -13,10 +13,10 @@ fi
 
 # 更新程序源码
 echo "从gitee拉取源码"
-git pull gitee master
+git pull
 
 # 重新编译和运行程序
 dart pub get
 dart compile exe bin/server.dart
-bin/server.dart --webAppDirectoryPath="$webPath"
+bin/server.exe --webAppDirectoryPath="$webPath"
   echo "$program_name 已启动."
