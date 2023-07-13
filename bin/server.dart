@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'dart:io';
 
 import 'package:shelf/shelf.dart';
@@ -7,23 +6,46 @@ import 'package:shelf_router/shelf_router.dart' as shelf_router;
 import 'package:shelf_static/shelf_static.dart' as shelf_static;
 import 'package:args/args.dart';
 
+import 'db/database_util.dart';
+import 'extension/handler_extension.dart';
+import 'router/base/constants.dart';
+import 'router/base/http_method_enum.dart';
+import 'router/user_router.dart';
+
 Future<void> main(List<String> args) async {
-  // 定义命令行参数解析器
-  final parser = ArgParser();
-  parser.addOption('webAppDirectoryPath');
-  final results = parser.parse(args);
-  final webAppDirectoryPath = results['webAppDirectoryPath'] as String?;
-  if (webAppDirectoryPath == null) {
-    print('请传入参数: --webAppDirectoryPath');
-    return;
-  }
-  print('传入的参数值为: $webAppDirectoryPath');
+  final webPath = getWebPathArg(args);
+  print('传入的Web项目路径为: $webPath');
 
   final port = int.parse(Platform.environment['PORT'] ?? '8080');
-  final cascade =
-      Cascade().add(getStaticHandler(webAppDirectoryPath)).add(_router);
 
-  // See https://pub.dev/documentation/shelf/latest/shelf_io/serve.html
+  final router = shelf_router.Router(
+    notFoundHandler: (_) => Response.notFound('Not Found'),
+  );
+  // 注册所有自定义的路由
+  final customRouters = [UserRouter()];
+  for (final customRouter in customRouters) {
+    for (final routerModel in customRouter.routers) {
+      Function handler = routerModel.handler;
+      if (routerModel.needAuth) {
+        handler = handler.auth;
+      }
+      if (routerModel.requiredParams?.isNotEmpty ?? false) {
+        handler = handler.checkParams(routerModel.requiredParams!);
+      }
+      router.add(
+        routerModel.method.text,
+        '$apiPrefix${routerModel.path}',
+        handler,
+      );
+    }
+  }
+  Cascade cascade = Cascade();
+  if (webPath != null) {
+    // serve Web项目
+    cascade = cascade.add(getStaticHandler(webPath));
+  }
+  // 接口路由
+  cascade = cascade.add(router);
   final server = await shelf_io.serve(
     logRequests().addHandler(cascade.handler),
     InternetAddress.anyIPv4,
@@ -31,10 +53,11 @@ Future<void> main(List<String> args) async {
   );
 
   print('Serving at http://${server.address.host}:${server.port}');
-  print('Web app is at http://localhost:${server.port}');
 
   // Used for tracking uptime of the demo server.
   _watch.start();
+
+  DatabaseUtil().init();
 }
 
 // Serve files from the file system.
@@ -44,34 +67,12 @@ Handler getStaticHandler(String path) => shelf_static.createStaticHandler(
       defaultDocument: 'index.html',
     );
 
-// Router instance to handler requests.
-final _router = shelf_router.Router()
-  ..get('/helloworld', _helloWorldHandler)
-  ..get(
-    '/time',
-    (request) => Response.ok(DateTime.now().toLocal().toString()),
-  )
-  ..get('/sum/<a|[0-9]+>/<b|[0-9]+>', _sumHandler);
-
-Response _helloWorldHandler(Request request) => Response.ok('Hello, World!');
-
-String _jsonEncode(Object? data) =>
-    const JsonEncoder.withIndent(' ').convert(data);
-
-const _jsonHeaders = {
-  'content-type': 'application/json',
-};
-
-Response _sumHandler(Request request, String a, String b) {
-  final aNum = int.parse(a);
-  final bNum = int.parse(b);
-  return Response.ok(
-    _jsonEncode({'a': aNum, 'b': bNum, 'sum': aNum + bNum}),
-    headers: {
-      ..._jsonHeaders,
-      'Cache-Control': 'public, max-age=604800, immutable',
-    },
-  );
-}
-
 final _watch = Stopwatch();
+
+String? getWebPathArg(List<String> args) {
+  final parser = ArgParser();
+  parser.addOption('webPath');
+  final results = parser.parse(args);
+  final webPath = results['webPath'] as String?;
+  return webPath;
+}

@@ -12,11 +12,11 @@ if pgrep -f "$program_name" >/dev/null; then
 fi
 
 # 更新程序源码
-echo "从gitee拉取源码"
+echo "拉取最新代码..."
 git pull
 
 # 重新编译和运行程序
 dart pub get
 dart compile exe bin/server.dart
-bin/server.exe --webAppDirectoryPath="$webPath"
+bin/server.exe --webPath="$webPath"
   echo "$program_name 已启动."
