@@ -14,6 +14,7 @@ class AuthManager {
   final List<TokenModel> tokens = [];
 
   TokenModel addToken(int userId) {
+    tokens.removeWhere((element) => element.userId == userId);
     final token = TokenModel(
       token: generateToken(userId),
       createTime: DateTime.now(),
