@@ -6,10 +6,10 @@ const notFound = 'not found';
 const notAuthed = 'not authed';
 const internalError = 'server internal error';
 
-String createBody({Object? body, String? message,int? code}) => _jsonEncode({
+String createBody({Object? body, String? message, int? code}) => _jsonEncode({
+      'code': code ?? 0,
       'message': message ?? success,
       'data': body,
-      'code': code ?? 0
     });
 
 String _jsonEncode(Object? data) =>

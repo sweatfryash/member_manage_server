@@ -20,6 +20,20 @@ extension AuthExtension on Function {
         .call(request.change(context: {'userIdPassedServerAuth': '$userId'}));
   }
 
+  /// 跨域处理,暂时直接固定允许所有跨域
+  Future<Response> handleCROS(Request request) async {
+    final response = (await this.call(request)) as Response;
+    return response.change(
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'POST, GET, OPTIONS, DELETE, PUT',
+        'Access-Control-Allow-Headers':
+            'Origin, X-Requested-With, Content-Type, Accept, token',
+        'Access-Control-Allow-Credentials': 'true',
+      },
+    );
+  }
+
   /// 校验参数是否为空
   Future<Response> Function(Request) checkParams(List<String> requiredParams) =>
       (Request request) async {

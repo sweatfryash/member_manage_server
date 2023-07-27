@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:shelf/shelf.dart';
@@ -21,7 +22,7 @@ Future<void> main(List<String> args) async {
   final router = shelf_router.Router(
     notFoundHandler: (_) => Response.notFound('Not Found'),
   );
-  // 注册所有自定义的路由
+  // 注册所有自定义的路由。默认给每个路由配套一个options请求，解决跨域问题
   final customRouters = [UserRouter()];
   for (final customRouter in customRouters) {
     for (final routerModel in customRouter.routers) {
@@ -32,31 +33,35 @@ Future<void> main(List<String> args) async {
       if (routerModel.requiredParams?.isNotEmpty ?? false) {
         handler = handler.checkParams(routerModel.requiredParams!);
       }
-      router.add(
-        routerModel.method.text,
-        '$apiPrefix${routerModel.path}',
-        handler,
-      );
+      // 加options为了解决跨域问题
+      router
+        ..add(
+          routerModel.method.text,
+          '$apiPrefix${routerModel.path}',
+          handler,
+        )
+        ..add(
+          HttpMethod.options.text,
+          '$apiPrefix${routerModel.path}',
+          crossHandler,
+        );
     }
   }
   Cascade cascade = Cascade();
   if (webPath != null) {
-    // serve Web项目
+    // Web项目路由
     cascade = cascade.add(getStaticHandler(webPath));
   }
-  // 接口路由
+  // API路由
   cascade = cascade.add(router);
   final server = await shelf_io.serve(
-    logRequests().addHandler(cascade.handler),
+    logRequests().addHandler(cascade.handler).handleCROS,
     InternetAddress.anyIPv4,
     port,
   );
-
   print('Serving at http://${server.address.host}:${server.port}');
-
   // Used for tracking uptime of the demo server.
   _watch.start();
-
   DatabaseUtil().init();
 }
 
@@ -76,3 +81,5 @@ String? getWebPathArg(List<String> args) {
   final webPath = results['webPath'] as String?;
   return webPath;
 }
+
+FutureOr<Response> crossHandler(Request request) => Response.ok(null);
