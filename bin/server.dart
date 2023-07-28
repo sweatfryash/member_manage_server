@@ -28,10 +28,10 @@ Future<void> main(List<String> args) async {
     for (final routerModel in customRouter.routers) {
       Function handler = routerModel.handler;
       if (routerModel.needAuth) {
-        handler = handler.auth;
+        handler = handler.withAuth;
       }
       if (routerModel.requiredParams?.isNotEmpty ?? false) {
-        handler = handler.checkParams(routerModel.requiredParams!);
+        handler = handler.withCheckParams(routerModel.requiredParams!);
       }
       // 加options为了解决跨域问题
       router
@@ -55,7 +55,7 @@ Future<void> main(List<String> args) async {
   // API路由
   cascade = cascade.add(router);
   final server = await shelf_io.serve(
-    logRequests().addHandler(cascade.handler).handleCROS,
+    logRequests().addHandler(cascade.handler).withHandleCORS,
     InternetAddress.anyIPv4,
     port,
   );
