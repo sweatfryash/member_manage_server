@@ -7,10 +7,10 @@ import 'package:shelf_router/shelf_router.dart' as shelf_router;
 import 'package:shelf_static/shelf_static.dart' as shelf_static;
 import 'package:args/args.dart';
 
-import 'db/database_util.dart';
 import 'extension/handler_extension.dart';
-import 'router/base/constants.dart';
+import 'constants/constants.dart';
 import 'router/base/http_method_enum.dart';
+import 'router/option_router.dart';
 import 'router/user_router.dart';
 
 Future<void> main(List<String> args) async {
@@ -23,7 +23,7 @@ Future<void> main(List<String> args) async {
     notFoundHandler: (_) => Response.notFound('Not Found'),
   );
   // 注册所有自定义的路由。默认给每个路由配套一个options请求，解决跨域问题
-  final customRouters = [UserRouter()];
+  final customRouters = [UserRouter(),OptionRouter()];
   for (final customRouter in customRouters) {
     for (final routerModel in customRouter.routers) {
       Function handler = routerModel.handler;
@@ -62,7 +62,6 @@ Future<void> main(List<String> args) async {
   print('Serving at http://${server.address.host}:${server.port}');
   // Used for tracking uptime of the demo server.
   _watch.start();
-  DatabaseUtil().init();
 }
 
 // Serve files from the file system.

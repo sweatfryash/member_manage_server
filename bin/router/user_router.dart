@@ -3,8 +3,9 @@ import 'dart:async';
 import 'package:shelf/shelf.dart';
 
 import '../auth/auth.dart';
+import '../db/tables/user_table.dart';
 import '../extension/request_extension.dart';
-import 'base/constants.dart';
+import '../constants/constants.dart';
 import 'base/http_method_enum.dart';
 import 'base/http_router_config.dart';
 import 'base/http_router_model.dart';
@@ -25,12 +26,15 @@ class UserRouter extends HttpRouterConfig {
   /// 登录
   Future<Response> loginHandler(Request request) async {
     final params = request.context['params'] as Map<String, dynamic>;
-    if (params[_username] != 'hch' || params[_password] != '123456') {
+    final username = params[_username];
+    final password = params[_password];
+    final user = await UserQuery.queryUser(username, password);
+    if (user == null) {
       return Response.ok(createBody(message: '账号或者密码错误，请重试', code: 1));
     }
     final tokenModel = AuthManager().addToken(1);
     return Response.ok(
-      createBody(body: {'name': '张三', 'age': 18}),
+      createBody(body: user.toJson()..remove('password')),
       headers: {'token': tokenModel.token},
     );
   }

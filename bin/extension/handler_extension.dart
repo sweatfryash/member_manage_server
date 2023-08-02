@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:shelf/shelf.dart';
 
 import '../auth/auth.dart';
-import '../router/base/constants.dart';
+import '../constants/constants.dart';
 
 extension AuthExtension on Function {
   /// 验证token，如果验证通过，将userId放入header中，key为userIdPassedServerAuth
