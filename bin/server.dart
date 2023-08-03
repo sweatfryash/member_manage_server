@@ -23,7 +23,7 @@ Future<void> main(List<String> args) async {
     notFoundHandler: (_) => Response.notFound('Not Found'),
   );
   // 注册所有自定义的路由。默认给每个路由配套一个options请求，解决跨域问题
-  final customRouters = [UserRouter(),OptionRouter()];
+  final customRouters = [UserRouter(), OptionRouter()];
   for (final customRouter in customRouters) {
     for (final routerModel in customRouter.routers) {
       Function handler = routerModel.handler;
@@ -55,7 +55,7 @@ Future<void> main(List<String> args) async {
   // API路由
   cascade = cascade.add(router);
   final server = await shelf_io.serve(
-    logRequests().addHandler(cascade.handler).withHandleCORS,
+    logRequests().addHandler(cascade.handler).withHandleCORS.withHandleError,
     InternetAddress.anyIPv4,
     port,
   );

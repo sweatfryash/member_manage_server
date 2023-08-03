@@ -4,6 +4,7 @@ import 'package:shelf/shelf.dart';
 
 import '../db/tables/option_table.dart';
 import '../constants/constants.dart';
+import '../extension/request_extension.dart';
 import 'base/http_method_enum.dart';
 import 'base/http_router_config.dart';
 import 'base/http_router_model.dart';
@@ -11,11 +12,10 @@ import 'base/http_router_model.dart';
 /// 用户相关
 class OptionRouter extends HttpRouterConfig {
   /// 路由前缀
-  final String base = '/option';
+  final String prefix = '/option';
 
   /// 路由
   final String add = '/add';
-  final String all = '/all';
 
   /// 参数
   static const _type = 'type';
@@ -24,7 +24,7 @@ class OptionRouter extends HttpRouterConfig {
 
   /// 新增
   Future<Response> addHandler(Request request) async {
-    final params = request.context['params'] as Map<String, dynamic>;
+    final params = request.params;
     final type = params[_type] as String;
     final name = params[_name] as String;
     final value = params[_value] as String?;
@@ -32,9 +32,9 @@ class OptionRouter extends HttpRouterConfig {
     return Response.ok(createBody());
   }
 
-  /// 查询v
+  /// 查询
   Future<Response> queryHandler(Request request) async {
-    final params = request.context['shelf_router/params'] as Map<String, dynamic>;
+    final params = request.routerParams;
     final type = params[_type] as String?;
     final options = await OptionQuery.queryOption(type: type);
     return Response.ok(createBody(body: options));
@@ -44,18 +44,18 @@ class OptionRouter extends HttpRouterConfig {
   List<HttpRouterModel> get routers => [
         HttpRouterModel(
           method: HttpMethod.post,
-          path: '$base$add',
+          path: '$prefix$add',
           handler: addHandler,
           requiredParams: [_type, _name],
         ),
         HttpRouterModel(
           method: HttpMethod.get,
-          path: '$base/<$_type>',
+          path: '$prefix/<$_type>',
           handler: queryHandler,
         ),
         HttpRouterModel(
           method: HttpMethod.get,
-          path: base,
+          path: prefix,
           handler: queryHandler,
         ),
       ];

@@ -17,4 +17,16 @@ extension Requestextension on Request {
     }
     return token;
   }
+
+  /// 请求体内的参数
+  Map<String, dynamic> get params {
+    final params = context['params'] as Map<String, dynamic>?;
+    return params ?? <String, dynamic>{};
+  }
+
+  /// 路由上拼接的参数
+  Map<String, dynamic> get routerParams {
+    final params = context['shelf_router/params'] as Map<String, dynamic>?;
+    return params ?? <String, dynamic>{};
+  }
 }

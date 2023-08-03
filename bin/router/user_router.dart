@@ -13,7 +13,7 @@ import 'base/http_router_model.dart';
 /// 用户相关
 class UserRouter extends HttpRouterConfig {
   /// 路由前缀
-  final String base = '/user';
+  final String prefix = '/user';
 
   /// 路由
   final String login = '/login';
@@ -25,7 +25,7 @@ class UserRouter extends HttpRouterConfig {
 
   /// 登录
   Future<Response> loginHandler(Request request) async {
-    final params = request.context['params'] as Map<String, dynamic>;
+    final params = request.params;
     final username = params[_username];
     final password = params[_password];
     final user = await UserQuery.queryUser(username, password);
@@ -49,14 +49,14 @@ class UserRouter extends HttpRouterConfig {
   List<HttpRouterModel> get routers => [
         HttpRouterModel(
           method: HttpMethod.post,
-          path: '$base$login',
+          path: '$prefix$login',
           handler: loginHandler,
           needAuth: false,
           requiredParams: [_username, _password],
         ),
         HttpRouterModel(
           method: HttpMethod.post,
-          path: '$base$logout',
+          path: '$prefix$logout',
           handler: logoutHandler,
         ),
       ];

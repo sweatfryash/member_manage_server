@@ -5,7 +5,7 @@ import 'package:shelf/shelf.dart';
 import '../auth/auth.dart';
 import '../constants/constants.dart';
 
-extension AuthExtension on Function {
+extension HandlerExtension on Function {
   /// 验证token，如果验证通过，将userId放入header中，key为userIdPassedServerAuth
   Future<Response> withAuth(Request request) async {
     final token = request.headers['token'];
@@ -33,6 +33,17 @@ extension AuthExtension on Function {
         'content-type': 'application/json',
       },
     );
+  }
+
+  /// 捕获异常
+  Future<Response> withHandleError(Request request) async {
+    try {
+      return await this.call(request);
+    } catch (e, s) {
+      print(e);
+      print(s);
+      return Response.ok(createBody(code: 1, message: e.toString()));
+    }
   }
 
   /// 校验参数是否为空
