@@ -9,7 +9,7 @@ import 'base/http_method_enum.dart';
 import 'base/http_router_config.dart';
 import 'base/http_router_model.dart';
 
-/// 用户相关
+/// 配置项增查
 class OptionRouter extends HttpRouterConfig {
   /// 路由前缀
   final String prefix = '/option';

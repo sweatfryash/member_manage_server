@@ -9,9 +9,9 @@ class Members extends Table {
 
   TextColumn get phone => text()();
 
-  RealColumn get money => real().withDefault(const Constant(0))();
+  RealColumn get money => real()();
 
-  IntColumn get discount => integer().withDefault(const Constant(90))();
+  IntColumn get discount => integer()();
 
   TextColumn get createTime => text()();
 }

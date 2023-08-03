@@ -280,17 +280,13 @@ class $MembersTable extends Members with TableInfo<$MembersTable, Member> {
   @override
   late final GeneratedColumn<double> money = GeneratedColumn<double>(
       'money', aliasedName, false,
-      type: DriftSqlType.double,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(0));
+      type: DriftSqlType.double, requiredDuringInsert: true);
   static const VerificationMeta _discountMeta =
       const VerificationMeta('discount');
   @override
   late final GeneratedColumn<int> discount = GeneratedColumn<int>(
       'discount', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(90));
+      type: DriftSqlType.int, requiredDuringInsert: true);
   static const VerificationMeta _createTimeMeta =
       const VerificationMeta('createTime');
   @override
@@ -327,10 +323,14 @@ class $MembersTable extends Members with TableInfo<$MembersTable, Member> {
     if (data.containsKey('money')) {
       context.handle(
           _moneyMeta, money.isAcceptableOrUnknown(data['money']!, _moneyMeta));
+    } else if (isInserting) {
+      context.missing(_moneyMeta);
     }
     if (data.containsKey('discount')) {
       context.handle(_discountMeta,
           discount.isAcceptableOrUnknown(data['discount']!, _discountMeta));
+    } else if (isInserting) {
+      context.missing(_discountMeta);
     }
     if (data.containsKey('create_time')) {
       context.handle(
@@ -493,11 +493,13 @@ class MembersCompanion extends UpdateCompanion<Member> {
     this.id = const Value.absent(),
     required String name,
     required String phone,
-    this.money = const Value.absent(),
-    this.discount = const Value.absent(),
+    required double money,
+    required int discount,
     required String createTime,
   })  : name = Value(name),
         phone = Value(phone),
+        money = Value(money),
+        discount = Value(discount),
         createTime = Value(createTime);
   static Insertable<Member> custom({
     Expression<int>? id,
@@ -591,7 +593,15 @@ class $CardsTable extends Cards with TableInfo<$CardsTable, Card> {
   @override
   late final GeneratedColumn<int> memberId = GeneratedColumn<int>(
       'member_id', aliasedName, false,
-      type: DriftSqlType.int, requiredDuringInsert: true);
+      type: DriftSqlType.int,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES members (id)'));
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+      'name', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
   static const VerificationMeta _usedMeta = const VerificationMeta('used');
   @override
   late final GeneratedColumn<int> used = GeneratedColumn<int>(
@@ -602,11 +612,6 @@ class $CardsTable extends Cards with TableInfo<$CardsTable, Card> {
   late final GeneratedColumn<int> total = GeneratedColumn<int>(
       'total', aliasedName, false,
       type: DriftSqlType.int, requiredDuringInsert: true);
-  static const VerificationMeta _typeIdMeta = const VerificationMeta('typeId');
-  @override
-  late final GeneratedColumn<String> typeId = GeneratedColumn<String>(
-      'type_id', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
   static const VerificationMeta _createTimeMeta =
       const VerificationMeta('createTime');
   @override
@@ -615,7 +620,7 @@ class $CardsTable extends Cards with TableInfo<$CardsTable, Card> {
       type: DriftSqlType.string, requiredDuringInsert: true);
   @override
   List<GeneratedColumn> get $columns =>
-      [id, memberId, used, total, typeId, createTime];
+      [id, memberId, name, used, total, createTime];
   @override
   String get aliasedName => _alias ?? 'cards';
   @override
@@ -634,6 +639,12 @@ class $CardsTable extends Cards with TableInfo<$CardsTable, Card> {
     } else if (isInserting) {
       context.missing(_memberIdMeta);
     }
+    if (data.containsKey('name')) {
+      context.handle(
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
     if (data.containsKey('used')) {
       context.handle(
           _usedMeta, used.isAcceptableOrUnknown(data['used']!, _usedMeta));
@@ -645,12 +656,6 @@ class $CardsTable extends Cards with TableInfo<$CardsTable, Card> {
           _totalMeta, total.isAcceptableOrUnknown(data['total']!, _totalMeta));
     } else if (isInserting) {
       context.missing(_totalMeta);
-    }
-    if (data.containsKey('type_id')) {
-      context.handle(_typeIdMeta,
-          typeId.isAcceptableOrUnknown(data['type_id']!, _typeIdMeta));
-    } else if (isInserting) {
-      context.missing(_typeIdMeta);
     }
     if (data.containsKey('create_time')) {
       context.handle(
@@ -673,12 +678,12 @@ class $CardsTable extends Cards with TableInfo<$CardsTable, Card> {
           .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
       memberId: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}member_id'])!,
+      name: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
       used: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}used'])!,
       total: attachedDatabase.typeMapping
           .read(DriftSqlType.int, data['${effectivePrefix}total'])!,
-      typeId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}type_id'])!,
       createTime: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}create_time'])!,
     );
@@ -693,25 +698,25 @@ class $CardsTable extends Cards with TableInfo<$CardsTable, Card> {
 class Card extends DataClass implements Insertable<Card> {
   final int id;
   final int memberId;
+  final String name;
   final int used;
   final int total;
-  final String typeId;
   final String createTime;
   const Card(
       {required this.id,
       required this.memberId,
+      required this.name,
       required this.used,
       required this.total,
-      required this.typeId,
       required this.createTime});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<int>(id);
     map['member_id'] = Variable<int>(memberId);
+    map['name'] = Variable<String>(name);
     map['used'] = Variable<int>(used);
     map['total'] = Variable<int>(total);
-    map['type_id'] = Variable<String>(typeId);
     map['create_time'] = Variable<String>(createTime);
     return map;
   }
@@ -720,9 +725,9 @@ class Card extends DataClass implements Insertable<Card> {
     return CardsCompanion(
       id: Value(id),
       memberId: Value(memberId),
+      name: Value(name),
       used: Value(used),
       total: Value(total),
-      typeId: Value(typeId),
       createTime: Value(createTime),
     );
   }
@@ -733,9 +738,9 @@ class Card extends DataClass implements Insertable<Card> {
     return Card(
       id: serializer.fromJson<int>(json['id']),
       memberId: serializer.fromJson<int>(json['memberId']),
+      name: serializer.fromJson<String>(json['name']),
       used: serializer.fromJson<int>(json['used']),
       total: serializer.fromJson<int>(json['total']),
-      typeId: serializer.fromJson<String>(json['typeId']),
       createTime: serializer.fromJson<String>(json['createTime']),
     );
   }
@@ -745,9 +750,9 @@ class Card extends DataClass implements Insertable<Card> {
     return <String, dynamic>{
       'id': serializer.toJson<int>(id),
       'memberId': serializer.toJson<int>(memberId),
+      'name': serializer.toJson<String>(name),
       'used': serializer.toJson<int>(used),
       'total': serializer.toJson<int>(total),
-      'typeId': serializer.toJson<String>(typeId),
       'createTime': serializer.toJson<String>(createTime),
     };
   }
@@ -755,16 +760,16 @@ class Card extends DataClass implements Insertable<Card> {
   Card copyWith(
           {int? id,
           int? memberId,
+          String? name,
           int? used,
           int? total,
-          String? typeId,
           String? createTime}) =>
       Card(
         id: id ?? this.id,
         memberId: memberId ?? this.memberId,
+        name: name ?? this.name,
         used: used ?? this.used,
         total: total ?? this.total,
-        typeId: typeId ?? this.typeId,
         createTime: createTime ?? this.createTime,
       );
   @override
@@ -772,70 +777,69 @@ class Card extends DataClass implements Insertable<Card> {
     return (StringBuffer('Card(')
           ..write('id: $id, ')
           ..write('memberId: $memberId, ')
+          ..write('name: $name, ')
           ..write('used: $used, ')
           ..write('total: $total, ')
-          ..write('typeId: $typeId, ')
           ..write('createTime: $createTime')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, memberId, used, total, typeId, createTime);
+  int get hashCode => Object.hash(id, memberId, name, used, total, createTime);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is Card &&
           other.id == this.id &&
           other.memberId == this.memberId &&
+          other.name == this.name &&
           other.used == this.used &&
           other.total == this.total &&
-          other.typeId == this.typeId &&
           other.createTime == this.createTime);
 }
 
 class CardsCompanion extends UpdateCompanion<Card> {
   final Value<int> id;
   final Value<int> memberId;
+  final Value<String> name;
   final Value<int> used;
   final Value<int> total;
-  final Value<String> typeId;
   final Value<String> createTime;
   const CardsCompanion({
     this.id = const Value.absent(),
     this.memberId = const Value.absent(),
+    this.name = const Value.absent(),
     this.used = const Value.absent(),
     this.total = const Value.absent(),
-    this.typeId = const Value.absent(),
     this.createTime = const Value.absent(),
   });
   CardsCompanion.insert({
     this.id = const Value.absent(),
     required int memberId,
+    required String name,
     required int used,
     required int total,
-    required String typeId,
     required String createTime,
   })  : memberId = Value(memberId),
+        name = Value(name),
         used = Value(used),
         total = Value(total),
-        typeId = Value(typeId),
         createTime = Value(createTime);
   static Insertable<Card> custom({
     Expression<int>? id,
     Expression<int>? memberId,
+    Expression<String>? name,
     Expression<int>? used,
     Expression<int>? total,
-    Expression<String>? typeId,
     Expression<String>? createTime,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (memberId != null) 'member_id': memberId,
+      if (name != null) 'name': name,
       if (used != null) 'used': used,
       if (total != null) 'total': total,
-      if (typeId != null) 'type_id': typeId,
       if (createTime != null) 'create_time': createTime,
     });
   }
@@ -843,16 +847,16 @@ class CardsCompanion extends UpdateCompanion<Card> {
   CardsCompanion copyWith(
       {Value<int>? id,
       Value<int>? memberId,
+      Value<String>? name,
       Value<int>? used,
       Value<int>? total,
-      Value<String>? typeId,
       Value<String>? createTime}) {
     return CardsCompanion(
       id: id ?? this.id,
       memberId: memberId ?? this.memberId,
+      name: name ?? this.name,
       used: used ?? this.used,
       total: total ?? this.total,
-      typeId: typeId ?? this.typeId,
       createTime: createTime ?? this.createTime,
     );
   }
@@ -866,14 +870,14 @@ class CardsCompanion extends UpdateCompanion<Card> {
     if (memberId.present) {
       map['member_id'] = Variable<int>(memberId.value);
     }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
     if (used.present) {
       map['used'] = Variable<int>(used.value);
     }
     if (total.present) {
       map['total'] = Variable<int>(total.value);
-    }
-    if (typeId.present) {
-      map['type_id'] = Variable<String>(typeId.value);
     }
     if (createTime.present) {
       map['create_time'] = Variable<String>(createTime.value);
@@ -886,9 +890,9 @@ class CardsCompanion extends UpdateCompanion<Card> {
     return (StringBuffer('CardsCompanion(')
           ..write('id: $id, ')
           ..write('memberId: $memberId, ')
+          ..write('name: $name, ')
           ..write('used: $used, ')
           ..write('total: $total, ')
-          ..write('typeId: $typeId, ')
           ..write('createTime: $createTime')
           ..write(')'))
         .toString();
@@ -1200,7 +1204,10 @@ class $CashRecordsTable extends CashRecords
   @override
   late final GeneratedColumn<int> userId = GeneratedColumn<int>(
       'user_id', aliasedName, false,
-      type: DriftSqlType.int, requiredDuringInsert: true);
+      type: DriftSqlType.int,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES users (id)'));
   static const VerificationMeta _expenseMeta =
       const VerificationMeta('expense');
   @override
@@ -1488,13 +1495,19 @@ class $MemberRecordsTable extends MemberRecords
   @override
   late final GeneratedColumn<int> userId = GeneratedColumn<int>(
       'user_id', aliasedName, false,
-      type: DriftSqlType.int, requiredDuringInsert: true);
+      type: DriftSqlType.int,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES users (id)'));
   static const VerificationMeta _memberIdMeta =
       const VerificationMeta('memberId');
   @override
   late final GeneratedColumn<int> memberId = GeneratedColumn<int>(
       'member_id', aliasedName, false,
-      type: DriftSqlType.int, requiredDuringInsert: true);
+      type: DriftSqlType.int,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES members (id)'));
   static const VerificationMeta _expenseMeta =
       const VerificationMeta('expense');
   @override
@@ -1887,12 +1900,18 @@ class $CardRecordsTable extends CardRecords
   @override
   late final GeneratedColumn<int> userId = GeneratedColumn<int>(
       'user_id', aliasedName, false,
-      type: DriftSqlType.int, requiredDuringInsert: true);
+      type: DriftSqlType.int,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES users (id)'));
   static const VerificationMeta _cardIdMeta = const VerificationMeta('cardId');
   @override
   late final GeneratedColumn<int> cardId = GeneratedColumn<int>(
       'card_id', aliasedName, false,
-      type: DriftSqlType.int, requiredDuringInsert: true);
+      type: DriftSqlType.int,
+      requiredDuringInsert: true,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('REFERENCES cards (id)'));
   static const VerificationMeta _preTimesMeta =
       const VerificationMeta('preTimes');
   @override

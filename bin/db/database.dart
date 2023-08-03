@@ -37,12 +37,15 @@ class MyDatabase extends _$MyDatabase {
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
+        beforeOpen: (details) async {
+          await customStatement('PRAGMA foreign_keys = ON');
+        },
         onCreate: (Migrator m) async {
           await m.createAll();
           await into(users).insert(
             const UsersCompanion(
               username: Value('admin'),
-              password: Value('258369'),
+              password: Value('123'),
             ),
           );
         },
