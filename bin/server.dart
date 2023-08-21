@@ -10,6 +10,7 @@ import 'package:args/args.dart';
 import 'extension/handler_extension.dart';
 import 'constants/constants.dart';
 import 'router/base/http_method_enum.dart';
+import 'router/member_router.dart';
 import 'router/option_router.dart';
 import 'router/user_router.dart';
 
@@ -23,15 +24,19 @@ Future<void> main(List<String> args) async {
     notFoundHandler: (_) => Response.notFound('Not Found'),
   );
   // 注册所有自定义的路由。默认给每个路由配套一个options请求，解决跨域问题
-  final customRouters = [UserRouter(), OptionRouter()];
+  final customRouters = [
+    UserRouter(),
+    OptionRouter(),
+    MemberRouter(),
+  ];
   for (final customRouter in customRouters) {
     for (final routerModel in customRouter.routers) {
       Function handler = routerModel.handler;
-      if (routerModel.needAuth) {
-        handler = handler.withAuth;
-      }
       if (routerModel.requiredParams?.isNotEmpty ?? false) {
         handler = handler.withCheckParams(routerModel.requiredParams!);
+      }
+      if (routerModel.needAuth) {
+        handler = handler.withAuth;
       }
       // 加options为了解决跨域问题
       router

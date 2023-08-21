@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:shelf/shelf.dart';
 
-import '../db/tables/option_table.dart';
 import '../constants/constants.dart';
+import '../db/queries/option_query.dart';
 import '../extension/request_extension.dart';
 import 'base/http_method_enum.dart';
 import 'base/http_router_config.dart';

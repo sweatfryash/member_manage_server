@@ -24,9 +24,12 @@ extension Requestextension on Request {
     return params ?? <String, dynamic>{};
   }
 
-  /// 路由上拼接的参数
+  /// RESTFUL路由上拼接的参数
   Map<String, dynamic> get routerParams {
     final params = context['shelf_router/params'] as Map<String, dynamic>?;
     return params ?? <String, dynamic>{};
   }
+
+  /// query参数
+  Map<String, String> get queryParams => requestedUri.queryParameters;
 }
